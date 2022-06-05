@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, make_response, render_template
 from flask import current_app as app
+# from regex import D
 from flask_jwt_extended import get_jwt, jwt_required
 from flask_cors import cross_origin
 from werkzeug.utils import secure_filename
@@ -44,7 +45,7 @@ def permission_failed():
     return make_response(jsonify({'error': 'Permission Failed','status_code':403}), 403)
 
 def request_failed():
-    return make_response(jsonify({'error': 'Request Failed','status_code':403}), 403)
+	return make_response(jsonify({'error': 'Request Failed','status_code':403}), 403)
 
 def defined_error(description, error="Defined Error", status_code=499):
 	return make_response(jsonify({'description':description,'error': error,'status_code':status_code}), status_code)
@@ -355,31 +356,114 @@ def reset_password():
 	except Exception as e:
 		return bad_request(str(e))
 
-@user.route('/insert_user', methods = ['POST'])
-def insert_user():
-    ROUTE_NAME = str(request.path)
-    now = datetime.datetime.now()
-    try:
-        dt =  Data()
-        data =  request.json
-        if 'nama' not in data:
-            return parameter_error('Missing nama in Body')
-        if 'nim' not in data:
-            return parameter_error("Missing nim in Body")
-        if 'password' not in data:
-            return parameter_error("Missing password in Body")
-        if 'jurusan' not in data:
-            return parameter_error('Missing jurusan in Body')
-        nama =  data['nama']
-        nim =  data['nim']
-        password  = data['password']
-        jurusan = data['jurusan']
-        
-        enc_password = hashlib.md5(password.encode('utf-8')).hexdigest()
-        query =  "INSERT INTO user(nama,nim,password,jurusan) VALUES(%s,%s,%s,%s)"
-        values = (nama,nim,enc_password,jurusan,)
-        dt.insert_data(query,values)
-        return ("Registrasi Berhasil")
-    except Exception as e:
-        return bad_request(str(e))
+@user.route('/insert_mahasiswa', methods = ['POST'])
+def insert_mahasiswa():
+	ROUTE_NAME = str(request.path)
+	now = datetime.datetime.now()
+	try:
+		dt =  Data()
+		data =  request.json
+		if "password" not in data:
+			return parameter_error("Missing password in request body")
+		if "email" not in data:
+			return parameter_error("Missing email in request body")
+		if "nama" not in data:
+			return parameter_error("Missing nama in request body")
+		if "nim" not in data:
+			return parameter_error("Missing nim in request body")
+		if "jurusan" not in data:
+			return parameter_error("Missing jurusan in request body")
+		if "angkatan" not in data:
+			return parameter_error("Missing angkatan in request body")
+		
+		password  =  data['password']
+		email  =  str(data['email'])
+		nama =  data['nama']
+		nim =  str(data['nim'])
+		jurusan =  data['jurusan']
+		angkatan = data['angkatan']
+		
+		cek_email  =  is_unique('user',email,'email')
+		if cek_email != True:
+			return parameter_error('email telah terdaftar')
+		cek_nim =  is_unique('mahasiswa',nim,'nim')
+		if cek_nim != True :
+			return parameter_error('nim telah terdaftar')
+		enc_password  =  hashlib.md5(password.encode('utf-8')).hexdigest()
+		query =  "INSERT INTO user (nama,email,password,role) VALUES (%s,%s,%s,%s) "
+		values = (nama,email,enc_password,2)
+		dt.insert_data(query,values)
+		# return('berhasil')
+		query_temp =  'SELECT id_user FROM user WHERE nama=%s AND email=%s'
+		value_temp = (nama,email)
+		hasil  =  dt.get_data(query_temp,value_temp)
+		if len(hasil)!=1:
+			return parameter_error('Email/Nama is Duplicated')
+		id_user = hasil[0]['id_user']
+		query2 = "INSERT INTO mahasiswa (nim,id_user,jurusan,angkatan) VALUES(%s,%s,%s,%s)"
+		# return nim
+		values2 =  (nim,id_user,jurusan,angkatan)
+		dt.insert_data(query2,values2)
+		return ('Pendaftaran berhasil')
+	except Exception as e:
+		return bad_request(str(e))
+
+@user.route('/insert_dosen', methods = ['POST'])
+def insert_dosen():
+	ROUTE_NAME = str(request.path)
+	now = datetime.datetime.now()
+	try:
+		dt =  Data()
+		data =  request.json
+		if "password" not in data:
+			return parameter_error("Missing password in request body")
+		if "email" not in data:
+			return parameter_error("Missing email in request body")
+		if "nama" not in data:
+			return parameter_error("Missing nama in request body")
+		if "nip" not in data:
+			return parameter_error("Missing nip in request body")
+		if "jurusan" not in data:
+			return parameter_error("Missing jurusan in request body")
+
+		password  =  data['password']
+		email  =  data['email']
+		nama =  data['nama']
+		nip =  data['nip']
+		jurusan =  data['jurusan']
+		cek_email  =  is_unique('user',email,'email')
+		if cek_email != True:
+			return parameter_error('email telah terdaftar')
+		cek_nip =  is_unique('dosen',nip,'nip')
+		if cek_nip != True :
+			return parameter_error('nip telah terdaftar')
+		enc_password  =  hashlib.md5(password.encode('utf-8')).hexdigest()
+		query =  "INSERT INTO user (nama,email,password,role) VALUES (%s,%s,%s,%s) "
+		values = (nama,email,enc_password,1, )
+		dt.insert_data(query,values)
+		query_temp =  'SELECT id_user FROM user WHERE nama=%s AND email=%s'
+		value_temp = (nama,email, )
+		hasil  =  dt.get_data(query_temp,value_temp)
+		if len(hasil)!=1:
+			return parameter_error('Email/Nama is Duplicated')
+		id_user = hasil[0]['id_user']
+		query2 = "INSERT INTO dosen (nip,id_user,jurusan,status) VALUES(%s,%s,%s,%s)"
+		values2 =  (nip,id_user,jurusan,1)
+		dt.insert_data(query2,values2)
+		return ('Pendaftaran berhasil')
+	except Exception as e:
+		return bad_request(str(e))
+
 #endregion ================================= USER AREA ==========================================================================
+def is_unique(tabel, value, kolom):
+	dt = Data()
+	query =  "SELECT * FROM "+ tabel +" WHERE "+kolom+"=%s"
+	values =  (value,)
+	print(query)
+	print(values)
+	hasil = dt.get_data(query,values)
+	# return hasil
+	if len(hasil) != 0:
+		return False
+	else:
+		return True

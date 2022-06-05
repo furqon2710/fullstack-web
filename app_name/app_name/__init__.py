@@ -21,7 +21,7 @@ from . import config as CFG
 # from .contoh_blueprint.controllers import contoh_blueprint
 from .user.controllers import user
 from .lokasi.controllers import lokasi
-
+from .matakuliah.controller import matakuliah
 #region >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 app = Flask(__name__, static_url_path=None) #panggil modul flask
 
@@ -228,6 +228,11 @@ def cek_credential():
 
 	return jsonify(hasil)
 
+
+
+@app.route("/halaman_login", methods=["GET"])
+def halaman_login():
+    return render_template
 #endregion >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> AUTH AREA (JWT) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -261,5 +266,6 @@ def not_found(error):
 
 app.register_blueprint(user, url_prefix='/user')
 app.register_blueprint(lokasi, url_prefix='/lokasi')
+app.register_blueprint(matakuliah, url_prefix='/matakuliah')
 
 #--------------------- END REGISTER BLUEPRINT ------------------------
