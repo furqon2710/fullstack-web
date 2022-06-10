@@ -73,7 +73,6 @@ def random_string_number_only(stringLength):
 @matakuliah.route('/',methods=['GET'])
 def nilai():
     return 'Blueprint Matakuliah'
-
 @matakuliah.route('/insert_mk',methods = ['POST'])
 def insert_mk():
     try :
@@ -101,11 +100,16 @@ def insert_mk():
 @matakuliah.route('/get_peserta_kelas',methods=['GET'])
 def get_kelas():
 	try:
+		dt =  Data()
 		hasil = "Data Tidak ditemukan"
 		data =  request.json
+		if 'kode mk' not in data:
+			return parameter_error("Missing kode mk in request body")
 		kode_mk = data['kode mk']
-		return(hasil)
-
+		query =  "SELECT * FROM `krs` WHERE `kode mk` = %s"
+		values = (kode_mk)
+		hasil = dt.get_data(query,values)
+		return jsonify(hasil)
 	except Exception as e:
 		return bad_request(str(e))
 # endregion =========================================================== MATA KULIAH AREA =====================

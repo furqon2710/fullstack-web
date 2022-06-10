@@ -22,6 +22,7 @@ from . import config as CFG
 from .user.controllers import user
 from .lokasi.controllers import lokasi
 from .matakuliah.controller import matakuliah
+from .absensi.controller import absensi
 #region >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CONFIGURATION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 app = Flask(__name__, static_url_path=None) #panggil modul flask
 
@@ -240,7 +241,7 @@ def halaman_login():
 
 @app.route("/")
 def homeee():
-	return "Bisa LSP Backend"
+	return "Web Absensi RFID Backend"
 
 #endregion >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INDEX ROUTE AREA <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -267,5 +268,6 @@ def not_found(error):
 app.register_blueprint(user, url_prefix='/user')
 app.register_blueprint(lokasi, url_prefix='/lokasi')
 app.register_blueprint(matakuliah, url_prefix='/matakuliah')
+app.register_blueprint(absensi, url_prefix='/absensi')
 
 #--------------------- END REGISTER BLUEPRINT ------------------------
