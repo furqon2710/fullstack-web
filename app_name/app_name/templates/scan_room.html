@@ -1,0 +1,105 @@
+{% extends 'sidebar_dosen.html' %}
+{% block main_content %}
+<div class="container">
+    <h1>Absensi Pertemuan {{pertemuan}}</h1>
+    <h4>{% if user %}
+            {{user.nama}}
+        {% else %}
+            Guest
+        {% endif %}
+    </h4>
+    <h4>Mata Kuliah : {% if judul %}
+        {{judul}}
+    {% else %}
+        Unknown 
+    {% endif %}</h4>
+    <a href=""class='btn btn-primary'>Scan Room</a>
+    <a href="{{url_for('absensi.end_session',kode_mk= kode_mk, pertemuan= pertemuan )}}" class="btn btn-danger">Akhir Kelas</a>
+    <div class="row">
+        <!-- <img src="{{url_for('static', filename= gambar     )}}" alt="" style="width:400px;height:300px;"> -->
+    </div>
+    <div class="row">
+        <table class="table" id="tabel_absensi" style="width:60%;">
+            <thead>
+                <th scope="col">Nama</th>
+                <th scope="col">NIM</th>
+                <th scope="col">Status</th>
+                <th scope="col">Detail</th>
+            </thead>
+            <tbody>
+                {% if scan %}
+                    {% for mahasiswa in scan %}
+                        {% if mahasiswa.status==0 %}
+                            <tr class="table-danger">
+                                <th scope="row">{{ mahasiswa.nama }}</th>
+                                    <td>{{ mahasiswa.nim }}</td>
+                                    <td>Tidak Hadir</td>
+                                    <td><button nim={{ mahasiswa.nim }} class="btn btn-primary edit">Edit</button></td>
+                            </tr>
+                        {% else %}
+                            <tr class="table-success">
+                            <th scope="row">{{ mahasiswa.nama }}</th>
+                            <td>{{ mahasiswa.nim }}</td>
+                            <td>Hadir</td>
+                            <td><button nim= {{ mahasiswa.nim }} class="btn btn-primary edit">Edit</but></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+        <script>
+            $('#tabel_absensi').on("click",".edit",function(){
+                event.preventDefault();
+                const nim = $(this).attr("nim")
+                console.log(nim)
+                $.ajax({
+                    method:"POST",
+                    url:"/user/get_mahasiswa",
+                    data:JSON.stringify({
+                        nim : nim
+                    })
+                }).done(function(msg){
+                    console.log(msg.nama)
+                    $("#nama_mhs").val(msg.nama)
+                    $("#nim").val(msg.nim)
+                    $("#exampleModal").modal("show")
+                })
+        
+            })
+        </script>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form action="/absensi/create_absensi" method="POST">
+                <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Edit Kehadiran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="kode mk">Nama</label><br>
+                    <input type="text"  name="kode mk" value="namaaaaa" id="nama_mhs" readonly><br>
+                    <label for="pertemuan">NIM</label><br>    
+                    <input type="number"  name="pertemuan" value="NIM" id="nim" readonly><br>
+                    <label for="Status">Ubah Status menjadi:</label><br>
+                    <select class="form-select" aria-label="Default select example">
+                        <option selected>Status Kehadiran</option>
+                        <option value="1">Hadir</option>
+                        <option value="2">Tidak Hadir</option>
+                        <option value="3">Izin</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+{% endblock %}

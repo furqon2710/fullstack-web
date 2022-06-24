@@ -76,216 +76,11 @@ def random_string_number_only(stringLength):
 
 #region ================================= MY PROFILE AREA ==========================================================================
 
-@user.route('/get_my_profile', methods=['GET', 'OPTIONS'])
-@jwt_required()
-@cross_origin()
-def get_my_profile():
-	try:
-		ROUTE_NAME = str(request.path)
-
-		id_user = str(get_jwt()["id_user"])
-		role = str(get_jwt()["role"])
-
-		if role not in role_group_all:
-			return permission_failed()
-		
-		dt = Data()
-
-		query = """ SELECT a.* FROM user a WHERE id_user = %s AND is_delete = 0 """
-		values = (id_user, )
-
-		rowCount = dt.row_count(query, values)
-		hasil = dt.get_data(query, values)
-		hasil = {'data': hasil , 'status_code': 200, 'row_count': rowCount}
-		########## INSERT LOG ##############
-		imd = ImmutableMultiDict(request.args)
-		imd = imd.to_dict()
-		param_logs = "[" + str(imd) + "]"
-		try:
-			logs = secure_filename(strftime("%Y-%m-%d %H:%M:%S"))+" - "+ROUTE_NAME+" - id_user = "+str(id_user)+" - roles = "+str(role)+"\n"
-		except Exception as e:
-			logs = secure_filename(strftime("%Y-%m-%d %H:%M:%S"))+" - "+ROUTE_NAME+" - id_user = NULL - roles = NULL\n"
-		tambahLogs(logs)
-		####################################
-		return make_response(jsonify(hasil),200)
-	except Exception as e:
-		return bad_request(str(e))
-
-@user.route('/update_my_profile', methods=['PUT', 'OPTIONS'])
-@jwt_required()
-@cross_origin()
-def update_my_profile():
-	ROUTE_NAME = str(request.path)
-
-	now = datetime.datetime.now()
-	id_user 		= str(get_jwt()["id_user"])
-	role 			= str(get_jwt()["role"])
-
-	if role not in role_group_all:
-		return permission_failed()
-	
-	try:
-		dt = Data()
-		data = request.json
-
-
-		query_temp = " SELECT id_user FROM user WHERE id_user = %s AND is_delete != 1 "
-		values_temp = (id_user, )
-		data_temp = dt.get_data(query_temp, values_temp)
-		if len(data_temp) == 0:
-			return defined_error("Gagal, data tidak ditemukan")
-
-		query = """ UPDATE user SET id_user = id_user """
-		values = ()
-		
-		if "password" in data:
-			password = data["password"]
-
-			if "old_password" not in data:
-				return parameter_error("Missing old_password in Request Body")
-
-			old_password = data["old_password"]
-			old_pass_enc = hashlib.md5(old_password.encode('utf-8')).hexdigest()
-			# check if old password is correct
-			query_temp = "SELECT id_user, password FROM user WHERE id_user = %s AND password = %s LIMIT 1"
-			values_temp = (id_user, old_pass_enc)
-			if len(dt.get_data(query_temp, values_temp)) == 0:
-				return defined_error("Password lama tidak sesuai")
-
-			# Convert password to MD5
-			pass_ency = hashlib.md5(password.encode('utf-8')).hexdigest()
-			query += """ ,password = %s, waktu_terakhir_ganti_password = %s """
-			values += (pass_ency, now, )
-
-		if "nama" in data:
-			nama = data["nama"]
-			query += """ ,nama = %s """
-			values += (nama, )
-
-		if "tanggal_lahir" in data:
-			tanggal_lahir = data["tanggal_lahir"]
-			query += """ ,tanggal_lahir = %s """
-			values += (tanggal_lahir, )
-
-		if "jenis_kelamin" in data:
-			jenis_kelamin = data["jenis_kelamin"].upper()
-			# validasi data jenis kelamin
-			if str(jenis_kelamin) not in ["LK", "PR"]:
-				return parameter_error("Invalid jenis_kelamin Parameter")
-			query += """ ,jenis_kelamin = %s """
-			values += (jenis_kelamin, )
-
-		if "nomor_telepon" in data:
-			nomor_telepon = data["nomor_telepon"]
-			query += """ ,nomor_telepon = %s """
-			values += (nomor_telepon, )
-
-		if "alamat" in data:
-			alamat = data["alamat"]
-			query += """ ,alamat = %s """
-			values += (alamat, )
-
-		if "foto_user" in data:
-			filename_photo = secure_filename(strftime("%Y-%m-%d %H:%M:%S")+"_"+str(random_string_number_only(5))+"_foto_user.png")
-			save(data["foto_user"], os.path.join(app.config['UPLOAD_FOLDER_FOTO_USER'], filename_photo))
-
-			query += """ ,foto_user = %s """
-			values += (filename_photo, )
-		
-		query += """ WHERE id_user = %s """
-		values += (id_user, )
-		dt.insert_data(query, values)
-
-		hasil = "Success Update My Profile"
-		try:
-			logs = secure_filename(strftime("%Y-%m-%d %H:%M:%S"))+" - "+ROUTE_NAME+" - id_user = "+str(id_user)+" - roles = "+str(role)+"\n"
-		except Exception as e:
-			logs = secure_filename(strftime("%Y-%m-%d %H:%M:%S"))+" - "+ROUTE_NAME+" - id_user = NULL - roles = NULL\n"
-		tambahLogs(logs)
-		return make_response(jsonify({'status_code':200, 'description': hasil} ), 200)
-	except Exception as e:
-		return bad_request(str(e))
-
 #endregion ================================= MY PROFILE AREA ==========================================================================
 
 
 #region ================================= CUSTOMER AREA ==========================================================================
 
-@user.route('/insert_customer', methods=['POST', 'OPTIONS'])
-@cross_origin()
-def insert_customer():
-	ROUTE_NAME = str(request.path)
-
-	now = datetime.datetime.now()
-	try:
-		dt = Data()
-		data = request.json
-
-		# Check mandatory data
-		if "email" not in data:
-			return parameter_error("Missing email in Request Body")
-		if "password" not in data:
-			return parameter_error("Missing password in Request Body")
-		if "nama" not in data:
-			return parameter_error("Missing nama in Request Body")
-
-		email = data["email"]
-		password = data["password"]
-		nama = data["nama"]
-
-		# check if username already used or not
-		query_temp = "SELECT id_user FROM user WHERE email = %s AND is_delete != 1"
-		values_temp = (email, )
-		if len(dt.get_data(query_temp, values_temp)) != 0:
-			return defined_error("Email Already Registered")
-
-		# Convert password to MD5
-		pass_ency = hashlib.md5(password.encode('utf-8')).hexdigest()
-
-		# Check optional data
-		# Default variables for optional data
-		tanggal_lahir	= None
-		jenis_kelamin	= None
-		nomor_telepon 	= None
-		alamat			= None
-		foto_user		= None
-
-		if "tanggal_lahir" in data:
-			tanggal_lahir = data["tanggal_lahir"]
-		if "jenis_kelamin" in data:
-			jenis_kelamin = data["jenis_kelamin"]
-			# Validasi data jenis kelamin
-			if jenis_kelamin not in ["LK", "PR"]:
-				return parameter_error("Invalid jenis_kelamin Parameter")
-		if "nomor_telepon" in data:
-			nomor_telepon = data["nomor_telepon"]
-		if "alamat" in data:
-			alamat = data["alamat"]
-		if "foto_user" in data:
-			filename_photo = secure_filename(strftime("%Y-%m-%d %H:%M:%S")+"_"+str(random_string_number_only(5))+"_foto_user.png")
-			save(data["foto_user"], os.path.join(app.config['UPLOAD_FOLDER_FOTO_USER'], filename_photo))
-
-			foto_user = filename_photo
-
-		# Insert to table user
-		query = "INSERT into user (email, password, nama, tanggal_lahir, jenis_kelamin, nomor_telepon, alamat, foto_user) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-		values = (email, pass_ency, nama, tanggal_lahir, jenis_kelamin, tanggal_lahir, alamat, foto_user)
-		id_user = dt.insert_data_last_row(query, values)
-
-		# Insert to table customer
-		query2 = "INSERT INTO customer (id_user) VALUES (%s)"
-		values2 = (id_user, )
-		dt.insert_data(query2, values2)
-
-		hasil = "Insert Customer Success"
-		try:
-			logs = secure_filename(strftime("%Y-%m-%d %H:%M:%S"))+" - "+ROUTE_NAME+" - id_user = "+str(id_user)+" - roles = "+str(role)+"\n"
-		except Exception as e:
-			logs = secure_filename(strftime("%Y-%m-%d %H:%M:%S"))+" - "+ROUTE_NAME+" - id_user = NULL - roles = NULL\n"
-		tambahLogs(logs)
-		return make_response(jsonify({'status_code':200, 'description': hasil} ), 200)
-	except Exception as e:
-		return bad_request(str(e))
 
 #endregion ================================= CUSTOMER AREA ==========================================================================
 
@@ -453,6 +248,23 @@ def insert_dosen():
 		return ('Pendaftaran berhasil')
 	except Exception as e:
 		return bad_request(str(e))
+@user.route('/get_mahasiswa',methods=['GET','POST'])
+def get_mahasiswa():
+    print('hit api')
+    dt =  Data()
+    # data = request.json
+    # print()
+    data = request.get_json(force=True)
+    print(type(data))
+    print(data)
+    if 'nim' not in data:
+        return jsonify('Missin nim in request body')
+    nim =  data['nim']
+    query =  "SELECT * FROM mahasiswa LEFT JOIN user ON mahasiswa.id_user = user.id_user WHERE nim=%s"
+    values  = (nim,)
+    hasil =  dt.get_data(query,values)
+    hasil =  hasil[0]
+    return jsonify(hasil)
 
 #endregion ================================= USER AREA ==========================================================================
 def is_unique(tabel, value, kolom):

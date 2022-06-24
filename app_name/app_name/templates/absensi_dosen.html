@@ -1,0 +1,84 @@
+{% extends 'sidebar_dosen.html' %}
+{% block main_content %}
+<div class="container">
+    <h1>Rekap Absensi</h1>
+    <h4>{% if user %}
+            {{user.nama}}
+        {% else %}
+            Guest
+        {% endif %}
+    </h4>
+    <h4>Mata Kuliah : {% if matkul %}
+        {{matkul.judul}}
+    {% else %}
+        Unknown 
+    {% endif %}</h4>
+    <table class="table" style="width:60%;">
+        <thead>
+            <th scope="col">Pertemuan</th>
+            <th scope="col">Tanggal</th>
+            <th scope="col">Status</th>
+            <th scope="col">Detail</th>
+        </thead>
+        <tbody>
+            {% if absensi %}
+                {% for absen in absensi %}
+                    {% if absen.status==0 %}
+                        <tr class="table-danger">
+                            <form action="/absensi_dosen">
+                            <th scope="row">{{ absen.pertemuan }}</th>
+                                <td>{{ absen.tanggal }}</td>
+                                <td>Belum dimulai</td>
+                                <td><a href="{{url_for('absensi.scan_template',kode_mk=absen.kode_mk,pertemuan=absen.pertemuan,judul=matkul.judul)}}" class="btn btn-primary">Mulai kelas</a></td>
+                            </form>
+                        </tr>
+                    {% else %}
+                        <tr class="table-success">
+                        <th scope="row">{{ absen.pertemuan }}</th>
+                        <td>{{ absen.tanggal }}</td>
+                        <td>Telah selesai</td>
+                        <td><a href="{{url_for('absensi.archive',kode_mk=absen.kode_mk,pertemuan=absen.pertemuan,judul=matkul.judul)}}" class="btn btn-success">Lihat arsip</a></td>
+                        </tr>
+                    {% endif %}
+                    <!-- <tr>
+                    <th scope="row">{{ absen.pertemuan }}</th>
+                    <td>{{ absen.tanggal }}</td>
+                    <td>{{ absen.status}}</td>
+                    </tr> -->
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+    <!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+    Buat pertemuan baru
+</button>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="/absensi/create_absensi" method="POST">
+            <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Pertemuan Baru</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="kode mk">Kode MK</label><br>    
+                <input type="number"  name="kode mk" value="{{ matkul.kode_mk }}" readonly><br>
+                <label for="pertemuan">Pertemuan</label><br>    
+                <input type="number"  name="pertemuan" value="{{ last_pertemuan }}" readonly><br>
+                <label for="tanggal">Tanggal Pertemuan</label><br>    
+                <input type="date" id="tanggal" name="tanggal"></td>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

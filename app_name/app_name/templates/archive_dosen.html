@@ -1,0 +1,52 @@
+{% extends 'sidebar_dosen.html' %}
+{% block main_content %}
+<div class="container">
+    <h1>Absensi Pertemuan {{pertemuan}}</h1>
+    <h4>{% if user %}
+            {{user.nama}}
+        {% else %}
+            Guest
+        {% endif %}
+    </h4>
+    <h4>Mata Kuliah : {% if judul %}
+        {{judul}}
+    {% else %}
+        Unknown 
+    {% endif %}</h4>
+    <div class="row">
+        <table class="table" style="width:60%;">
+            <thead>
+                <th scope="col">Nama</th>
+                <th scope="col">NIM</th>
+                <th scope="col">Status</th>
+                <th scope="col">Detail</th>
+            </thead>
+            <tbody>
+                {% if scan %}
+                    {% for mahasiswa in scan %}
+                        {% if mahasiswa.status==0 %}
+                            <tr class="table-danger">
+                                <form action="/absensi_dosen">
+                                <th scope="row">{{ mahasiswa.nama }}</th>
+                                    <td>{{ mahasiswa.nim }}</td>
+                                    <td>Tidak Hadir</td>
+                                    <td><a href="" class="btn btn-primary">Edit</a></td>
+                                </form>
+                            </tr>
+                        {% else %}
+                            <tr class="table-success">
+                            <th scope="row">{{ mahasiswa.nama }}</th>
+                            <td>{{ mahasiswa.nim }}</td>
+                            <td>Hadir</td>
+                            <td><a href="" class="btn btn-primary">Edit</a></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endblock %}

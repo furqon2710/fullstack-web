@@ -31,6 +31,7 @@ def tambahLogs(logs):
 	f.write(logs)
 	f.close()
 
+
 def save(encoded_data, filename):
 	arr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
 	img = cv2.imdecode(arr, cv2.IMREAD_UNCHANGED)
@@ -84,14 +85,14 @@ def insert_mk():
             return parameter_error('Missing semester in request body')
         if 'kelas' not in data:
             return parameter_error('Missing kelas in request body')
-        if 'hari' not in data:
-            return parameter_error("missing hari in request body")
+        if 'pengajar'not in data:
+            return parameter_error('Missing pengajar in request body')
         judul =  data['judul']
         semester =  data['semester']
         kelas =  data['kelas']
-        hari =  data['hari']
-        query =  "INSERT INTO `mata kuliah`(judul,semester, kelas, hari) VALUES(%s,%s,%s,%s)"
-        values =  (judul,semester,kelas,hari,)
+        pengajar = data['pengajar']
+        query =  "INSERT INTO `mata kuliah`(judul,semester, kelas, pengajar) VALUES(%s,%s,%s,%s)"
+        values =  (judul,semester,kelas,pengajar,)
         dt.insert_data(query,values)
         return('MK berhasil dibuat')
     except Exception as e:
@@ -112,6 +113,18 @@ def get_kelas():
 		return jsonify(hasil)
 	except Exception as e:
 		return bad_request(str(e))
+
+def get_mk(nip):
+    try:
+        print(nip)
+        dt = Data()
+        hasil =  'tidak ditemukan'
+        query = "SELECT * FROM `mata kuliah` WHERE pengajar=%s"
+        values =  (nip,)
+        hasil =  dt.get_data(query,values)
+        return hasil
+    except Exception as e:
+        return bad_request(str(e))
 # endregion =========================================================== MATA KULIAH AREA =====================
 
 
@@ -125,20 +138,26 @@ def create_krs():
             return parameter_error('Missing nim in request body')
         if 'kode mk' not in data:
             return parameter_error('Missing kode mk in request body')
-        if 'semester' not in data:
-            return parameter_error('Missing semester in request body')
+        # if 'semester' not in data:
+        #     return parameter_error('Missing semester in request body')
         nim  =  str(data['nim'])
         kode_mk =  data['kode mk']
-        semester =  data['semester']
+        # semester =  data['semester']
         print(nim)
-        query  = "INSERT INTO krs(nim,`kode mk`,semester) VALUES(%s,%s,%s)"
-        values = (nim,kode_mk,semester)
+        query  = "INSERT INTO krs(nim,`kode mk`) VALUES(%s,%s)"
+        values = (nim,kode_mk,)
         print(query)
-        print(values)
+        print(values)   
         dt.insert_data(query,values)
         return("KRS berhasil dibuat")
     except Exception as e:
         return bad_request(str(e))
-
+def get_krs(id_user):
+    dt =  Data()
+    query = "SELECT mahasiswa.nim,`mata kuliah`.judul,hari,kelas,krs.`kode mk`   FROM krs LEFT JOIN mahasiswa ON krs.nim=mahasiswa.nim LEFT JOIN user ON mahasiswa.id_user =  user.id_user LEFT JOIN `mata kuliah` ON `krs`.`kode mk`=`mata kuliah`.`kode mk` WHERE user.id_user =%s"
+    values =  (id_user,)
+    hasil = dt.get_data(query,values)
+    print(hasil)
+    return 
 
 # endregion ========================================================== KRS ==================================

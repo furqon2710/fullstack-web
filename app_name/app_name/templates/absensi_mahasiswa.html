@@ -1,0 +1,49 @@
+{% extends 'sidebar_mahasiswa.html' %}
+{% block main_content %}
+<div class="container">
+<h1>Rekap Absensi</h1>
+<h4>{% if user %}
+        {{user.nama}}
+    {% else %}
+        Guest
+    {% endif %}
+</h4>
+<h4>Mata Kuliah : {% if matkul %}
+    {{matkul[0].judul}}
+{% else %}
+    Unknown 
+{% endif %}</h4>
+
+<table class="table" style="width:60%;">
+    <thead>
+        <th scope="col">Pertemuan</th>
+        <th scope="col">Tanggal</th>
+        <th scope="col">Keterangan</th>
+    </thead>
+    <tbody>
+        {% if absensi %}
+            {% for absen in absensi %}
+                {% if absen.status==0 %}
+                    <tr class="table-danger">
+                    <th scope="row">{{ absen.pertemuan }}</th>
+                    <td>{{ absen.tanggal }}</td>
+                    <td>Alfa</td>
+                    </tr>
+                {% else %}
+                    <tr class="table-success">
+                    <th scope="row">{{ absen.pertemuan }}</th>
+                    <td>{{ absen.tanggal }}</td>
+                    <td>Hadir</td>
+                    </tr>
+                {% endif %}
+                <!-- <tr>
+                <th scope="row">{{ absen.pertemuan }}</th>
+                <td>{{ absen.tanggal }}</td>
+                <td>{{ absen.status}}</td>
+                </tr> -->
+            {% endfor %}
+        {% endif %}
+    </tbody>
+</table>
+</div>
+{% endblock %}
