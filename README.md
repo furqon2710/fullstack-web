@@ -1,6 +1,6 @@
 # fullstack-web
 
-Front End :
+Front End : Jinja + Boottrap
 Back End : Flask
 
 This code purposed to make a web for my thesis. The web is about a attendance system using RFID signal
