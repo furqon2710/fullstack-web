@@ -9,3 +9,4 @@ Backend made with flask that connected with SQL Database. Which resulting some A
 Front-end created with jinja and bootstrap template. 
 
 Demo : https://youtu.be/7ouJo9UOft0
+as a portofolio this web Will be improve and host in the future
